@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python -m pip install -q -r requirements.txt -r requirements-dev.txt)",
+      "Bash(python -m pytest tests/integration --collect-only -q)",
+      "Bash(python -m pytest tests/integration -v)",
+      "Bash(python -m pip install -q ruff)",
+      "Bash(python -m ruff check src/ tests/)",
+      "Bash(python -m ruff format --check src/ tests/)",
+      "Bash(python -m ruff format src/ tests/)",
+      "Bash(python -m pytest tests/ -v --tb=short)"
+    ]
+  }
+}

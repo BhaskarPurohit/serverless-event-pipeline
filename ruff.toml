@@ -1,0 +1,25 @@
+target-version = "py311"
+line-length = 100
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (undefined names, unused imports)
+    "I",   # isort (import ordering)
+    "UP",  # pyupgrade (modern Python idioms)
+    "B",   # flake8-bugbear (common bugs and design issues)
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501", # line too long — formatter handles this
+    "B008", # do not perform function calls in default argument values
+]
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "S101", # assert is fine in tests
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"

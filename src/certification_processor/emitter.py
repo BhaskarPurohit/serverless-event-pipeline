@@ -14,7 +14,9 @@ from botocore.config import Config
 
 logger = logging.getLogger(__name__)
 
-_EVENT_BUS_ARN = os.environ["DOWNSTREAM_EVENT_BUS_ARN"]
+_EVENT_BUS_ARN = os.environ.get(
+    "DOWNSTREAM_EVENT_BUS_ARN", ""
+)  # overridden by patched_modules in tests
 _SOURCE = "trade.certification.processor"
 
 _eb = boto3.client(

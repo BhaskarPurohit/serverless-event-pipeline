@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 import boto3
 from botocore.config import Config
 
-_BUCKET = os.environ["ARCHIVE_BUCKET"]
+_BUCKET = os.environ.get("ARCHIVE_BUCKET", "")  # overridden by patched_modules in tests
 _s3 = boto3.client(
     "s3",
     config=Config(retries={"max_attempts": 3, "mode": "adaptive"}),

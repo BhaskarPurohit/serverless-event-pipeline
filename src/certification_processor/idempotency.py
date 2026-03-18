@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 import boto3
 from botocore.exceptions import ClientError
 
-_TABLE_NAME = os.environ["DYNAMODB_TABLE"]
+_TABLE_NAME = os.environ.get("DYNAMODB_TABLE", "")  # overridden by patched_modules in tests
 _dynamodb = boto3.resource("dynamodb")
 _table = _dynamodb.Table(_TABLE_NAME)
 

@@ -38,6 +38,19 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
 
+    # Job-level env: applied to every step, including pytest collection.
+    # Modules read these at import time, so they must be present before
+    # any step that triggers a Python import (install, unit tests, integration).
+    env:
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: testing
+      AWS_SECRET_ACCESS_KEY: testing
+      AWS_SECURITY_TOKEN: testing
+      AWS_SESSION_TOKEN: testing
+      DYNAMODB_TABLE: test-idempotency
+      ARCHIVE_BUCKET: test-bucket
+      DOWNSTREAM_EVENT_BUS_ARN: arn:aws:events:us-east-1:123456789012:event-bus/test-downstream
+
     steps:
       - uses: actions/checkout@v4
 
@@ -57,13 +70,6 @@ jobs:
             --cov-fail-under=80
 
       - name: Integration tests
-        # moto requires no real AWS credentials — dummy values satisfy botocore
-        env:
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: testing
-          AWS_SECRET_ACCESS_KEY: testing
-          AWS_SECURITY_TOKEN: testing
-          AWS_SESSION_TOKEN: testing
         run: |
           pytest tests/integration -v \
             --cov=src \

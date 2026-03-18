@@ -9,7 +9,9 @@
       "Bash(python -m ruff check src/ tests/)",
       "Bash(python -m ruff format --check src/ tests/)",
       "Bash(python -m ruff format src/ tests/)",
-      "Bash(python -m pytest tests/ -v --tb=short)"
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "Bash(python -m ruff format src/certification_processor/emitter.py)",
+      "Bash(python -m pytest tests/ -q)"
     ]
   }
 }

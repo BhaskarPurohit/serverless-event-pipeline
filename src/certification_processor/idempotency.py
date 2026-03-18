@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 import boto3
 from botocore.exceptions import ClientError
 
-_TABLE_NAME = os.environ.get("DYNAMODB_TABLE", "test-idempotency-table")  # overridden by patched_modules in tests
+_TABLE_NAME = os.environ.get("DYNAMODB_TABLE", "test-idempotency")
 _dynamodb = boto3.resource("dynamodb")
 _table = _dynamodb.Table(_TABLE_NAME)
 
@@ -30,18 +30,6 @@ class IdempotencyConflict(Exception):
 
 
 def write_processing(detail: dict) -> None:
-    """
-    Conditional put: transitions record to PROCESSING.
-
-    Allowed when:
-      - No item exists (first delivery)
-      - Existing item has same idempotencyKey AND status == PROCESSING
-        (re-entry after crash — let it retry)
-      - Existing item has status == FAILED (explicit replay)
-      - Existing item has a *different* idempotencyKey (new event version)
-
-    Raises IdempotencyConflict if status is COMPLETED for this exact key.
-    """
     cert_id: str = detail["certId"]
     idempotency_key: str = detail["idempotencyKey"]
     expires_at: str = detail.get("expiresAt", "")
@@ -59,11 +47,8 @@ def write_processing(detail: dict) -> None:
                 "eventPayload": detail,
             },
             ConditionExpression=(
-                # Allow if item doesn't exist at all
                 "attribute_not_exists(certId)"
-                # OR: same key but not yet completed (crash re-entry / failed retry)
                 " OR (idempotencyKey = :key AND #s <> :completed)"
-                # OR: different idempotency key (new version of the event)
                 " OR idempotencyKey <> :key"
             ),
             ExpressionAttributeNames={"#s": "status"},
@@ -78,7 +63,6 @@ def write_processing(detail: dict) -> None:
             raise IdempotencyConflict(
                 f"Event already processed: certId={cert_id} key={idempotency_key}"
             ) from e
-        # DynamoDB throttle or network error — let SQS retry
         raise
 
 
@@ -99,11 +83,6 @@ def mark_completed(cert_id: str, idempotency_key: str) -> None:
 
 
 def mark_failed(cert_id: str, idempotency_key: str, reason: str) -> None:
-    """
-    Transition to FAILED so that:
-      1. The DLQ alarm fires for ops visibility.
-      2. A manual replay (or new SQS delivery) can re-enter via write_processing.
-    """
     with contextlib.suppress(ClientError):
         _table.update_item(
             Key={"certId": cert_id, "SK": "#METADATA"},
@@ -113,7 +92,7 @@ def mark_failed(cert_id: str, idempotency_key: str, reason: str) -> None:
             ExpressionAttributeValues={
                 ":failed": "FAILED",
                 ":now": _now(),
-                ":reason": reason[:1000],  # DynamoDB string limit safety
+                ":reason": reason[:1000],
                 ":key": idempotency_key,
             },
         )

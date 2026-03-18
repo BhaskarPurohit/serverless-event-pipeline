@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 import boto3
 from botocore.config import Config
 
-_BUCKET = os.environ.get("ARCHIVE_BUCKET", "test-archive-bucket")  # overridden by patched_modules in tests
+_BUCKET = os.environ.get("ARCHIVE_BUCKET", "test-bucket")
 _s3 = boto3.client(
     "s3",
     config=Config(retries={"max_attempts": 3, "mode": "adaptive"}),
@@ -29,7 +29,6 @@ def archive_event(detail: dict) -> None:
         Key=key,
         Body=json.dumps(detail, default=str).encode(),
         ContentType="application/json",
-        # Server-side encryption — enforce even if bucket policy already does
         ServerSideEncryption="aws:kms",
     )
 

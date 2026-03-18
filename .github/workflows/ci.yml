@@ -63,6 +63,14 @@ jobs:
         run: pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Unit tests
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: testing
+          AWS_SECRET_ACCESS_KEY: testing
+          ARCHIVE_BUCKET: test-archive-bucket
+          DYNAMODB_TABLE: test-idempotency-table
+          EVENT_BUS_NAME: test-event-bus
+
         run: |
           pytest tests/unit -v \
             --cov=src \
